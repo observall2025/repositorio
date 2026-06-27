@@ -1,31 +1,23 @@
-import {
-  Archive,
-  ClipboardCheck,
-  ExternalLink,
-  FileCheck2,
-  FileText,
-  Folder,
-  FolderOpen,
-  Image,
-  LogOut,
-  ReceiptText
-} from "lucide-react";
+import { ExternalLink, FileText, FolderOpen, LogOut } from "lucide-react";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import CopyButton from "@/components/copy-button";
+import CreateFolderForm from "@/components/create-folder-form";
 import DeleteButton from "@/components/delete-button";
+import FolderActions from "@/components/folder-actions";
+import MoveFileForm from "@/components/move-file-form";
 import UploadForm from "@/components/upload-form";
 import { getCurrentUser } from "@/lib/auth";
-import { getStorageCategories, normalizeCategorySlug, type StorageCategory } from "@/lib/categories";
 import { getMaxUploadBytes, getStorageCapacityBytes } from "@/lib/env";
 import { toFriendlyError } from "@/lib/errors";
 import { formatBytes, formatDate } from "@/lib/format";
+import { normalizeFolderSlug } from "@/lib/folders";
+import { type DocumentItem, listDocuments, listFolders } from "@/lib/files";
 import { toToken } from "@/lib/links";
-import { type DocumentItem, listDocuments } from "@/lib/files";
 
 type DashboardPageProps = {
   searchParams?: Promise<{
-    category?: string;
+    folder?: string;
   }>;
 };
 
@@ -37,44 +29,12 @@ async function getBaseUrl() {
   return `${protocol}://${host}`;
 }
 
-function getCategoryIcon(slug: string) {
-  if (slug === "checklists") {
-    return ClipboardCheck;
+function getVisibleDocuments(documents: DocumentItem[], selectedFolder?: string | null) {
+  if (!selectedFolder) {
+    return [];
   }
 
-  if (slug === "relatorios") {
-    return FileText;
-  }
-
-  if (slug === "contratos") {
-    return FileCheck2;
-  }
-
-  if (slug === "financeiro") {
-    return ReceiptText;
-  }
-
-  if (slug === "imagens") {
-    return Image;
-  }
-
-  if (slug === "outros") {
-    return Archive;
-  }
-
-  return Folder;
-}
-
-function getCategoryStats(documents: DocumentItem[], categories: StorageCategory[]) {
-  return categories.map((category) => {
-    const categoryDocuments = documents.filter((document) => document.categorySlug === category.slug);
-
-    return {
-      ...category,
-      count: categoryDocuments.length,
-      size: categoryDocuments.reduce((sum, document) => sum + document.size, 0)
-    };
-  });
+  return documents.filter((document) => document.folderSlug === selectedFolder);
 }
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
@@ -85,8 +45,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   }
 
   const params = await searchParams;
-  const categories = getStorageCategories();
-  const selectedCategory = params?.category ? normalizeCategorySlug(params.category) : "todos";
+  const selectedFolder = params?.folder ? normalizeFolderSlug(params.folder) : null;
   const baseUrl = await getBaseUrl();
   let documents: DocumentItem[] = [];
   let setupError = "";
@@ -97,20 +56,14 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
     setupError = toFriendlyError(error, "Nao foi possivel conectar ao Supabase.");
   }
 
+  const folders = await listFolders(documents);
+  const activeFolder = selectedFolder ? folders.find((folder) => folder.slug === selectedFolder) : null;
+  const visibleDocuments = getVisibleDocuments(documents, activeFolder?.slug);
   const totalBytes = documents.reduce((sum, item) => sum + item.size, 0);
   const storageCapacityBytes = getStorageCapacityBytes();
   const maxUploadBytes = getMaxUploadBytes();
   const storagePercent = Math.min((totalBytes / storageCapacityBytes) * 100, 100);
   const remainingBytes = Math.max(storageCapacityBytes - totalBytes, 0);
-  const categoryStats = getCategoryStats(documents, categories);
-  const visibleDocuments =
-    selectedCategory === "todos"
-      ? documents
-      : documents.filter((document) => document.categorySlug === selectedCategory);
-  const selectedCategoryLabel =
-    selectedCategory === "todos"
-      ? "Todos os arquivos"
-      : categories.find((category) => category.slug === selectedCategory)?.label ?? "Geral";
 
   return (
     <main className="page">
@@ -118,7 +71,7 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
         <header className="header">
           <div>
             <h1>Repositorio de documentos</h1>
-            <p>Envie arquivos, copie o link e use na plataforma principal.</p>
+            <p>Organize arquivos em pastas, compacte uploads e compartilhe links curtos.</p>
           </div>
           <form action="/api/logout" method="post">
             <button className="button secondary" type="submit">
@@ -163,115 +116,121 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
           </div>
         </section>
 
-        <section className="folder-panel" aria-label="Pastas de armazenamento">
-          <div className="folder-head">
-            <div>
-              <h2>Pastas</h2>
-              <p>Organize os arquivos por categoria no Storage.</p>
-            </div>
-            <a className={`folder-chip ${selectedCategory === "todos" ? "active" : ""}`} href="/dashboard">
-              <FolderOpen size={17} aria-hidden="true" />
-              Todos
-            </a>
-          </div>
-
-          <div className="folder-grid">
-            {categoryStats.map((category) => {
-              const Icon = getCategoryIcon(category.slug);
-              const active = selectedCategory === category.slug;
-
-              return (
-                <a
-                  className={`folder-card ${active ? "active" : ""}`}
-                  href={`/dashboard?category=${category.slug}`}
-                  key={category.slug}
-                >
-                  <span className="folder-icon">
-                    <Icon size={20} aria-hidden="true" />
-                  </span>
-                  <span>
-                    <strong>{category.label}</strong>
-                    <small>{category.count} arquivo{category.count === 1 ? "" : "s"}</small>
-                  </span>
-                  <em>{formatBytes(category.size)}</em>
-                </a>
-              );
-            })}
-          </div>
-        </section>
-
-        <div className="grid">
-          <section className="section">
+        <div className="workspace-grid">
+          <section className="section upload-section">
             <div className="section-head">
               <h2>Novo arquivo</h2>
-              <p>PDFs, documentos Office e imagens sao compactados antes do envio quando houver reducao segura.</p>
+              <p>Escolha a pasta antes de importar. O arquivo sera compactado quando houver reducao segura.</p>
             </div>
             <div className="section-body">
-              <UploadForm categories={categories} />
+              <UploadForm folders={folders} />
             </div>
           </section>
 
-          <section className="section">
-            <div className="section-head">
-              <h2>{selectedCategoryLabel}</h2>
-              <p>Use o link de visualizacao para incorporar ou o link direto quando preferir abrir o arquivo bruto.</p>
+          <section className="section folder-panel explorer-panel" aria-label="Pastas de armazenamento">
+            <div className="section-head explorer-head">
+              <div>
+                <h2>Pastas</h2>
+                <p>Clique em uma pasta para abrir os arquivos.</p>
+              </div>
+              <CreateFolderForm />
             </div>
 
             {setupError ? (
               <p className="empty-state">{setupError}</p>
-            ) : visibleDocuments.length === 0 ? (
-              <p className="empty-state">Nenhum arquivo nesta pasta ainda.</p>
             ) : (
-              <div className="table-wrap">
-                <table className="files-table">
-                  <thead>
-                    <tr>
-                      <th>Arquivo</th>
-                      <th>Categoria</th>
-                      <th>Tamanho</th>
-                      <th>Enviado em</th>
-                      <th aria-label="Acoes" />
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {visibleDocuments.map((document) => {
-                      const viewUrl = `${baseUrl}/view/${toToken(document.path)}`;
+              <>
+                <div className="vista-folder-grid">
+                  {folders.map((folder) => {
+                    const active = activeFolder?.slug === folder.slug;
 
-                      return (
-                        <tr key={document.path}>
-                          <td>
-                            <div className="file-name">
-                              <span className="file-icon">
-                                <FileText size={18} aria-hidden="true" />
-                              </span>
-                              <div>
-                                <strong title={document.name}>{document.name}</strong>
-                                <span>{document.mimeType}</span>
+                    return (
+                      <article className={`vista-folder-card ${active ? "open" : ""}`} key={folder.slug}>
+                        <a className="vista-folder-open" href={`/dashboard?folder=${folder.slug}`}>
+                          <span className="vista-folder-icon" aria-hidden="true">
+                            <span />
+                          </span>
+                          <span className="vista-folder-text">
+                            <strong>{folder.label}</strong>
+                            <small>
+                              {folder.count} arquivo{folder.count === 1 ? "" : "s"} - {formatBytes(folder.size)}
+                            </small>
+                          </span>
+                        </a>
+                        <FolderActions folder={folder} />
+                      </article>
+                    );
+                  })}
+                </div>
+
+                {activeFolder ? (
+                  <section className="file-browser" aria-label={`Arquivos da pasta ${activeFolder.label}`}>
+                    <div className="file-browser-head">
+                      <div>
+                        <h2>
+                          <FolderOpen size={20} aria-hidden="true" />
+                          {activeFolder.label}
+                        </h2>
+                        <p>
+                          {visibleDocuments.length} arquivo{visibleDocuments.length === 1 ? "" : "s"} nesta pasta.
+                        </p>
+                      </div>
+                    </div>
+
+                    {visibleDocuments.length === 0 ? (
+                      <p className="empty-state inline-empty">Nenhum arquivo nesta pasta ainda.</p>
+                    ) : (
+                      <div className="file-grid">
+                        {visibleDocuments.map((document) => {
+                          const viewUrl = `${baseUrl}/view/${toToken(document.path)}`;
+
+                          return (
+                            <article className="file-card" key={document.path}>
+                              <div className="file-card-main">
+                                <span className="file-card-icon">
+                                  <FileText size={22} aria-hidden="true" />
+                                </span>
+                                <div>
+                                  <strong title={document.name}>{document.name}</strong>
+                                  <span>{document.mimeType}</span>
+                                </div>
                               </div>
-                            </div>
-                          </td>
-                          <td>
-                            <span className="category-badge">{document.categoryLabel}</span>
-                          </td>
-                          <td>{formatBytes(document.size)}</td>
-                          <td>{formatDate(document.createdAt)}</td>
-                          <td>
-                            <div className="actions">
-                              <CopyButton value={viewUrl} label="Copiar link de visualizacao" />
-                              <CopyButton value={document.publicUrl} label="Copiar link direto" variant="direct" />
-                              <a className="icon-button" href={viewUrl} target="_blank" rel="noreferrer" title="Abrir">
-                                <ExternalLink size={17} aria-hidden="true" />
-                                <span className="sr-only">Abrir</span>
-                              </a>
-                              <DeleteButton path={document.path} />
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                              <dl className="file-meta">
+                                <div>
+                                  <dt>Tamanho</dt>
+                                  <dd>{formatBytes(document.size)}</dd>
+                                </div>
+                                <div>
+                                  <dt>Enviado em</dt>
+                                  <dd>{formatDate(document.createdAt)}</dd>
+                                </div>
+                              </dl>
+                              <div className="file-card-actions">
+                                <CopyButton value={viewUrl} label="Copiar link de visualizacao" />
+                                <CopyButton value={document.publicUrl} label="Copiar link direto" variant="direct" />
+                                <a className="icon-button" href={viewUrl} target="_blank" rel="noreferrer" title="Abrir">
+                                  <ExternalLink size={17} aria-hidden="true" />
+                                  <span className="sr-only">Abrir</span>
+                                </a>
+                                <DeleteButton path={document.path} />
+                              </div>
+                              <MoveFileForm currentFolder={document.folderSlug} folders={folders} path={document.path} />
+                            </article>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </section>
+                ) : (
+                  <div className="closed-folder-state">
+                    <span className="vista-folder-icon large" aria-hidden="true">
+                      <span />
+                    </span>
+                    <strong>Abra uma pasta</strong>
+                    <p>Os arquivos aparecem aqui somente depois que uma pasta for selecionada.</p>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </div>

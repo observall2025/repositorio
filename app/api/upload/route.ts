@@ -23,13 +23,14 @@ export async function POST(request: NextRequest) {
       fileName?: string;
       fileSize?: number;
       category?: string;
+      folder?: string;
     };
 
     if (!body.fileName || typeof body.fileSize !== "number") {
       return NextResponse.json({ error: "Arquivo nao informado." }, { status: 400 });
     }
 
-    const uploaded = await createSignedDocumentUpload(body.fileName, body.fileSize, body.category);
+    const uploaded = await createSignedDocumentUpload(body.fileName, body.fileSize, body.folder ?? body.category);
     const viewerUrl = `${getRequestBaseUrl(request)}/view/${toToken(uploaded.path)}`;
 
     return NextResponse.json({

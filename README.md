@@ -7,7 +7,7 @@ Aplicacao simples para subir documentos no Supabase Storage e gerar links public
 - Login unico pelo Supabase Auth, restrito ao email admin configurado.
 - Upload direto para Supabase Storage com URL assinada.
 - Reducao de tamanho antes do upload para PDFs, documentos Office modernos e imagens, quando houver ganho seguro.
-- Organizacao por categorias, gravando novos arquivos em pastas como `uploads/checklists` e `uploads/contratos`.
+- Organizacao por pastas editaveis, gravando novos arquivos em caminhos como `uploads/clientes` e `uploads/contratos`.
 - Criacao automatica do bucket publico configurado.
 - Listagem dos documentos enviados.
 - Link curto de visualizacao pelo app e link publico direto do Supabase.
@@ -58,7 +58,7 @@ O arquivo nao passa pela Function da Vercel: o navegador tenta reduzir o tamanho
 
 Em PDFs, o app primeiro tenta uma compactacao estrutural sem perda. Se isso nao reduzir, ele tenta remontar as paginas como imagens JPEG em qualidade controlada e so usa esse resultado quando o arquivo final fica menor. Arquivos ja enviados nao sao alterados automaticamente: remova e envie novamente para aplicar a reducao.
 
-Novos uploads sao salvos na categoria escolhida. Arquivos antigos que estavam direto em `uploads/` continuam visiveis e aparecem na pasta Geral.
+Novos uploads sao salvos na pasta escolhida. Pastas vazias usam um marcador oculto no Storage para continuarem visiveis. Arquivos antigos que estavam direto em `uploads/` continuam visiveis e aparecem na pasta Geral.
 
 Para o dominio de producao, mantenha `NEXT_PUBLIC_APP_URL=https://repositorioent.vercel.app` tambem nas variaveis de ambiente da Vercel e faca um novo deploy depois da troca.
 

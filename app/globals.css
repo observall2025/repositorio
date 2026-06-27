@@ -300,6 +300,13 @@ button {
   justify-content: space-between;
 }
 
+.workspace-grid {
+  align-items: start;
+  display: grid;
+  gap: 18px;
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
+}
+
 .folder-panel {
   background: var(--surface);
   border: 1px solid var(--line);
@@ -307,6 +314,30 @@ button {
   box-shadow: var(--shadow);
   margin-bottom: 18px;
   padding: 16px;
+}
+
+.explorer-panel {
+  margin-bottom: 0;
+  overflow: hidden;
+  padding: 0;
+}
+
+.explorer-head {
+  align-items: start;
+  display: grid;
+  gap: 16px;
+  grid-template-columns: minmax(0, 1fr) minmax(280px, 340px);
+}
+
+.folder-create {
+  align-items: start;
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.folder-create .button {
+  min-height: 44px;
 }
 
 .folder-head {
@@ -407,6 +438,281 @@ button {
   font-size: 0.86rem;
   font-style: normal;
   white-space: nowrap;
+}
+
+.vista-folder-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  padding: 18px;
+}
+
+.vista-folder-card {
+  background: linear-gradient(180deg, #fffef8 0%, #fff8df 100%);
+  border: 1px solid #e5c76b;
+  border-radius: 8px;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 10px 24px rgba(118, 96, 35, 0.1);
+  display: grid;
+  gap: 10px;
+  padding: 12px;
+}
+
+.vista-folder-card.open {
+  border-color: #c99c1d;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 0 0 3px rgba(224, 179, 50, 0.22),
+    0 16px 30px rgba(118, 96, 35, 0.13);
+}
+
+.vista-folder-open {
+  align-items: center;
+  color: var(--text);
+  display: grid;
+  gap: 12px;
+  grid-template-columns: auto minmax(0, 1fr);
+  min-height: 66px;
+  text-decoration: none;
+}
+
+.vista-folder-icon {
+  display: inline-block;
+  height: 43px;
+  position: relative;
+  width: 58px;
+}
+
+.vista-folder-icon::before {
+  background: linear-gradient(180deg, #ffe889 0%, #f4c949 100%);
+  border: 1px solid #d5a72c;
+  border-bottom: 0;
+  border-radius: 7px 9px 0 0;
+  content: "";
+  height: 14px;
+  left: 5px;
+  position: absolute;
+  top: 2px;
+  width: 28px;
+}
+
+.vista-folder-icon span {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(255, 255, 255, 0) 40%),
+    linear-gradient(180deg, #ffd85a 0%, #f4b92c 72%, #dd9b1f 100%);
+  border: 1px solid #c88f16;
+  border-radius: 8px;
+  bottom: 0;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    inset 0 -8px 15px rgba(160, 95, 0, 0.14);
+  display: block;
+  height: 34px;
+  left: 0;
+  position: absolute;
+  right: 0;
+}
+
+.vista-folder-icon.large {
+  height: 68px;
+  width: 90px;
+}
+
+.vista-folder-icon.large::before {
+  height: 20px;
+  width: 42px;
+}
+
+.vista-folder-icon.large span {
+  height: 53px;
+}
+
+.vista-folder-text strong,
+.vista-folder-text small {
+  display: block;
+}
+
+.vista-folder-text strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.vista-folder-text small {
+  color: #725b19;
+  margin-top: 4px;
+}
+
+.folder-actions {
+  display: grid;
+  gap: 8px;
+}
+
+.folder-action-row {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.folder-edit {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto auto;
+}
+
+.danger-icon {
+  color: var(--danger);
+}
+
+.form-note {
+  font-size: 0.82rem;
+  grid-column: 1 / -1;
+  line-height: 1.35;
+  margin: 0;
+}
+
+.error-text {
+  color: var(--danger);
+}
+
+.file-browser {
+  border-top: 1px solid var(--line);
+  padding: 18px;
+}
+
+.file-browser-head {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.file-browser-head h2 {
+  align-items: center;
+  display: flex;
+  font-size: 1.05rem;
+  gap: 8px;
+  margin: 0;
+}
+
+.file-browser-head p {
+  color: var(--muted);
+  margin: 5px 0 0;
+}
+
+.closed-folder-state {
+  align-items: center;
+  border-top: 1px solid var(--line);
+  color: var(--muted);
+  display: grid;
+  justify-items: center;
+  min-height: 260px;
+  padding: 26px;
+  text-align: center;
+}
+
+.closed-folder-state strong {
+  color: var(--text);
+  font-size: 1.05rem;
+  margin-top: 8px;
+}
+
+.closed-folder-state p {
+  line-height: 1.5;
+  margin: 6px 0 0;
+}
+
+.inline-empty {
+  border: 1px dashed var(--line);
+  border-radius: 8px;
+  padding: 18px;
+}
+
+.file-grid {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.file-card {
+  background: #fbfcfb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  display: grid;
+  gap: 12px;
+  padding: 14px;
+}
+
+.file-card-main {
+  align-items: center;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr);
+}
+
+.file-card-main strong {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.file-card-main span,
+.file-meta dt {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.file-card-icon {
+  align-items: center;
+  background: rgba(14, 111, 100, 0.1);
+  border-radius: 8px;
+  color: var(--brand);
+  display: inline-flex;
+  height: 44px;
+  justify-content: center;
+  width: 44px;
+}
+
+.file-meta {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  margin: 0;
+}
+
+.file-meta div {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 9px 10px;
+}
+
+.file-meta dt,
+.file-meta dd {
+  margin: 0;
+}
+
+.file-meta dd {
+  font-weight: 700;
+  margin-top: 3px;
+}
+
+.file-card-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.move-file-form {
+  display: grid;
+  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+}
+
+.compact-input {
+  min-height: 38px;
+  padding: 7px 10px;
 }
 
 .grid {
@@ -544,18 +850,6 @@ button {
   font-size: 0.86rem;
 }
 
-.category-badge {
-  background: rgba(14, 111, 100, 0.09);
-  border: 1px solid rgba(14, 111, 100, 0.18);
-  border-radius: 999px;
-  color: var(--brand-strong);
-  display: inline-flex;
-  font-size: 0.82rem;
-  font-weight: 700;
-  padding: 5px 9px;
-  white-space: nowrap;
-}
-
 .actions {
   display: flex;
   gap: 8px;
@@ -655,14 +949,29 @@ button {
   }
 
   .metrics,
+  .workspace-grid,
+  .explorer-head,
   .folder-grid,
-  .grid {
+  .grid,
+  .vista-folder-grid,
+  .file-grid {
     grid-template-columns: 1fr;
   }
 
   .folder-head {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .folder-create,
+  .folder-edit,
+  .move-file-form {
+    grid-template-columns: 1fr;
+  }
+
+  .folder-action-row,
+  .file-card-actions {
+    justify-content: flex-start;
   }
 
   .storage-panel > div:first-child,

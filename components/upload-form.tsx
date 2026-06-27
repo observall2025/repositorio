@@ -4,8 +4,8 @@ import { CheckCircle2, Loader2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
 import { optimizeFileForStorage, type FileOptimizationResult } from "@/lib/client-file-optimizer";
-import { DEFAULT_CATEGORY_SLUG, type StorageCategory } from "@/lib/categories";
 import { formatBytes } from "@/lib/format";
+import { DEFAULT_FOLDER_SLUG, type StorageFolder } from "@/lib/folders";
 import CopyButton from "./copy-button";
 
 type UploadResponse = {
@@ -19,19 +19,19 @@ type UploadResponse = {
 type StatusKind = "info" | "success" | "error";
 
 type UploadFormProps = {
-  categories: StorageCategory[];
+  folders: StorageFolder[];
 };
 
-function getSuccessMessage(optimization: FileOptimizationResult, categoryLabel: string) {
+function getSuccessMessage(optimization: FileOptimizationResult, folderLabel: string) {
   if (optimization.changed) {
-    return `Arquivo enviado em ${categoryLabel}. Reduzido de ${formatBytes(optimization.originalSize)} para ${formatBytes(optimization.optimizedSize)}.`;
+    return `Arquivo enviado em ${folderLabel}. Reduzido de ${formatBytes(optimization.originalSize)} para ${formatBytes(optimization.optimizedSize)}.`;
   }
 
   if (optimization.kind === "unsupported") {
-    return `Arquivo enviado em ${categoryLabel}.`;
+    return `Arquivo enviado em ${folderLabel}.`;
   }
 
-  return `Arquivo enviado em ${categoryLabel}. ${optimization.detail}`;
+  return `Arquivo enviado em ${folderLabel}. ${optimization.detail}`;
 }
 
 async function uploadToSignedUrl(signedUrl: string, file: File) {
@@ -58,7 +58,7 @@ async function uploadToSignedUrl(signedUrl: string, file: File) {
   }
 }
 
-export default function UploadForm({ categories }: UploadFormProps) {
+export default function UploadForm({ folders }: UploadFormProps) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -70,8 +70,8 @@ export default function UploadForm({ categories }: UploadFormProps) {
     const form = event.currentTarget;
     const formData = new FormData(form);
     const file = formData.get("file");
-    const category = String(formData.get("category") || DEFAULT_CATEGORY_SLUG);
-    const categoryLabel = categories.find((item) => item.slug === category)?.label ?? "Geral";
+    const folder = String(formData.get("folder") || DEFAULT_FOLDER_SLUG);
+    const folderLabel = folders.find((item) => item.slug === folder)?.label ?? "Geral";
 
     setBusy(true);
     setMessage("");
@@ -96,7 +96,7 @@ export default function UploadForm({ categories }: UploadFormProps) {
         body: JSON.stringify({
           fileName: uploadFile.name,
           fileSize: uploadFile.size,
-          category
+          folder
         })
       });
       const data = (await response.json()) as UploadResponse;
@@ -113,7 +113,7 @@ export default function UploadForm({ categories }: UploadFormProps) {
       await uploadToSignedUrl(data.signedUrl, uploadFile);
 
       setStatusKind("success");
-      setMessage(getSuccessMessage(optimized, categoryLabel));
+      setMessage(getSuccessMessage(optimized, folderLabel));
       setViewerUrl(data.viewerUrl || "");
       form.reset();
       router.refresh();
@@ -139,11 +139,11 @@ export default function UploadForm({ categories }: UploadFormProps) {
       </label>
 
       <label className="field">
-        <span>Categoria</span>
-        <select className="input" name="category" defaultValue={DEFAULT_CATEGORY_SLUG}>
-          {categories.map((category) => (
-            <option key={category.slug} value={category.slug}>
-              {category.label}
+        <span>Pasta</span>
+        <select className="input" name="folder" defaultValue={DEFAULT_FOLDER_SLUG}>
+          {folders.map((folder) => (
+            <option key={folder.slug} value={folder.slug}>
+              {folder.label}
             </option>
           ))}
         </select>
