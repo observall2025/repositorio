@@ -13,9 +13,9 @@ export type FileOptimizationResult = {
 
 const IMAGE_MAX_SIDE = 1800;
 const IMAGE_QUALITY = 0.78;
-const PDF_IMAGE_MAX_SIDE = 2200;
-const PDF_IMAGE_MAX_SCALE = 2.6;
-const PDF_IMAGE_QUALITY = 0.84;
+const PDF_IMAGE_MAX_SIDE = 2600;
+const PDF_IMAGE_MAX_SCALE = 3;
+const PDF_IMAGE_QUALITY = 0.9;
 const MIN_SAVINGS_BYTES = 8 * 1024;
 const MIN_SAVINGS_RATIO = 0.02;
 
