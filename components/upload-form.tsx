@@ -3,7 +3,8 @@
 import { CheckCircle2, Loader2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
-import { canRenderPdf, renderPdfToStorage } from "@/lib/pdf-render-client";
+import { optimizeFileForStorage, type FileOptimizationResult } from "@/lib/client-file-optimizer";
+import { formatBytes } from "@/lib/format";
 import CopyButton from "./copy-button";
 
 type UploadResponse = {
@@ -13,6 +14,20 @@ type UploadResponse = {
   viewerUrl?: string;
   publicUrl?: string;
 };
+
+type StatusKind = "info" | "success" | "error";
+
+function getSuccessMessage(optimization: FileOptimizationResult) {
+  if (optimization.changed) {
+    return `Arquivo enviado. Reduzido de ${formatBytes(optimization.originalSize)} para ${formatBytes(optimization.optimizedSize)}.`;
+  }
+
+  if (optimization.kind === "unsupported") {
+    return "Arquivo enviado.";
+  }
+
+  return `Arquivo enviado. ${optimization.detail}`;
+}
 
 async function uploadToSignedUrl(signedUrl: string, file: File) {
   const body = new FormData();
@@ -42,6 +57,7 @@ export default function UploadForm() {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [statusKind, setStatusKind] = useState<StatusKind>("info");
   const [viewerUrl, setViewerUrl] = useState("");
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -52,6 +68,7 @@ export default function UploadForm() {
 
     setBusy(true);
     setMessage("");
+    setStatusKind("info");
     setViewerUrl("");
 
     try {
@@ -59,14 +76,19 @@ export default function UploadForm() {
         throw new Error("Arquivo nao enviado.");
       }
 
+      setMessage("Otimizando arquivo...");
+      const optimized = await optimizeFileForStorage(file);
+      const uploadFile = optimized.file;
+
+      setMessage("Gerando link de upload...");
       const response = await fetch("/api/upload", {
         method: "POST",
         headers: {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          fileName: file.name,
-          fileSize: file.size
+          fileName: uploadFile.name,
+          fileSize: uploadFile.size
         })
       });
       const data = (await response.json()) as UploadResponse;
@@ -79,29 +101,21 @@ export default function UploadForm() {
         throw new Error("URL de upload nao gerada.");
       }
 
-      await uploadToSignedUrl(data.signedUrl, file);
+      setMessage("Enviando arquivo...");
+      await uploadToSignedUrl(data.signedUrl, uploadFile);
 
-      setMessage("Arquivo enviado.");
-
-      if (data.path && canRenderPdf(file)) {
-        setMessage("Arquivo enviado. Renderizando paginas...");
-        const pages = await renderPdfToStorage(data.path, file, ({ page, total }) => {
-          setMessage(`Renderizando pagina ${page} de ${total}...`);
-        });
-        setMessage(`Arquivo enviado e renderizado (${pages} paginas).`);
-      }
-
+      setStatusKind("success");
+      setMessage(getSuccessMessage(optimized));
       setViewerUrl(data.viewerUrl || "");
       form.reset();
       router.refresh();
     } catch (error) {
+      setStatusKind("error");
       setMessage(error instanceof Error ? error.message : "Falha ao enviar arquivo.");
     } finally {
       setBusy(false);
     }
   }
-
-  const success = Boolean(viewerUrl);
 
   return (
     <form className="upload-form" onSubmit={handleSubmit}>
@@ -122,8 +136,9 @@ export default function UploadForm() {
       </button>
 
       {message ? (
-        <p className={`status ${success ? "success" : "error"}`}>
-          {success ? <CheckCircle2 size={16} aria-hidden="true" /> : null}
+        <p className={`status ${statusKind}`}>
+          {statusKind === "success" ? <CheckCircle2 size={16} aria-hidden="true" /> : null}
+          {statusKind === "info" ? <Loader2 size={16} aria-hidden="true" /> : null}
           {message}
         </p>
       ) : null}

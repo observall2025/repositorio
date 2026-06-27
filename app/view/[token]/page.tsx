@@ -1,8 +1,8 @@
 import { Download } from "lucide-react";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getBucketName } from "@/lib/env";
-import { listRenderedPages } from "@/lib/files";
-import { getFileNameFromPath, fromToken, isBrowserDocument, isImage, isOfficeDocument, isPdf } from "@/lib/links";
+import { resolveDocumentPathFromToken } from "@/lib/files";
+import { getFileNameFromPath, isBrowserDocument, isImage, isOfficeDocument, isPdf, toToken } from "@/lib/links";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
 type ViewPageProps = {
@@ -13,10 +13,16 @@ type ViewPageProps = {
 
 export default async function ViewPage({ params }: ViewPageProps) {
   const { token } = await params;
-  const path = fromToken(token);
+  const path = await resolveDocumentPathFromToken(token);
 
   if (!path || !path.startsWith("uploads/")) {
     notFound();
+  }
+
+  const canonicalToken = toToken(path);
+
+  if (token !== canonicalToken) {
+    redirect(`/view/${canonicalToken}`);
   }
 
   const supabase = getSupabaseAdmin();
@@ -25,7 +31,6 @@ export default async function ViewPage({ params }: ViewPageProps) {
   const publicUrl = data.publicUrl;
   const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
   const browserDocumentUrl = isPdf(path) ? `${publicUrl}#toolbar=0&navpanes=0&view=FitH` : publicUrl;
-  const renderedPages = isPdf(path) ? await listRenderedPages(path) : [];
 
   return (
     <main className="viewer-page">
@@ -33,17 +38,11 @@ export default async function ViewPage({ params }: ViewPageProps) {
         <strong title={fileName}>{fileName}</strong>
         <a className="button secondary" href={publicUrl} target="_blank" rel="noreferrer">
           <Download size={18} aria-hidden="true" />
-          Baixar original
+          Baixar
         </a>
       </header>
 
-      {renderedPages.length > 0 ? (
-        <div className="rendered-document">
-          {renderedPages.map((page, index) => (
-            <img key={page.path} src={page.publicUrl} alt={`${fileName} - pagina ${index + 1}`} />
-          ))}
-        </div>
-      ) : isImage(path) ? (
+      {isImage(path) ? (
         <div className="viewer-image">
           <img src={publicUrl} alt={fileName} />
         </div>
@@ -58,7 +57,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
             <p className="panel-copy">Este formato ainda nao tem renderizacao no navegador.</p>
             <a className="button" href={publicUrl} target="_blank" rel="noreferrer">
               <Download size={18} aria-hidden="true" />
-              Baixar original
+              Baixar
             </a>
           </div>
         </div>

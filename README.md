@@ -6,9 +6,10 @@ Aplicacao simples para subir documentos no Supabase Storage e gerar links public
 
 - Login unico pelo Supabase Auth, restrito ao email admin configurado.
 - Upload direto para Supabase Storage com URL assinada.
+- Reducao de tamanho antes do upload para PDFs, documentos Office modernos e imagens, quando houver ganho seguro.
 - Criacao automatica do bucket publico configurado.
 - Listagem dos documentos enviados.
-- Link de visualizacao pelo app e link publico direto do Supabase.
+- Link curto de visualizacao pelo app e link publico direto do Supabase.
 - Exclusao de arquivos para controlar o uso da cota.
 
 ## Variaveis de ambiente
@@ -24,7 +25,7 @@ SUPABASE_BUCKET=documents
 ADMIN_EMAIL=admin@repo.com
 SESSION_SECRET=um-segredo-grande-e-aleatorio
 
-NEXT_PUBLIC_APP_URL=https://seu-app.vercel.app
+NEXT_PUBLIC_APP_URL=https://repositorioent.vercel.app
 MAX_UPLOAD_MB=50
 STORAGE_CAPACITY_MB=1024
 ```
@@ -52,7 +53,11 @@ Abra `http://localhost:3000`.
 
 O bucket definido em `SUPABASE_BUCKET` sera criado automaticamente como publico no primeiro upload/listagem.
 
-O arquivo nao passa pela Function da Vercel: o servidor gera uma URL assinada e o navegador envia direto para o Supabase Storage.
+O arquivo nao passa pela Function da Vercel: o navegador tenta reduzir o tamanho localmente, o servidor gera uma URL assinada para o arquivo final e o navegador envia direto para o Supabase Storage.
+
+Em PDFs, o app primeiro tenta uma compactacao estrutural sem perda. Se isso nao reduzir, ele tenta remontar as paginas como imagens JPEG em qualidade controlada e so usa esse resultado quando o arquivo final fica menor. Arquivos ja enviados nao sao alterados automaticamente: remova e envie novamente para aplicar a reducao.
+
+Para o dominio de producao, mantenha `NEXT_PUBLIC_APP_URL=https://repositorioent.vercel.app` tambem nas variaveis de ambiente da Vercel e faca um novo deploy depois da troca.
 
 Defina `STORAGE_CAPACITY_MB` com a capacidade total do armazenamento que deseja acompanhar no dashboard. O valor padrao e `1024`, equivalente a 1 GB.
 
