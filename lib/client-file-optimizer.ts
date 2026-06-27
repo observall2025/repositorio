@@ -13,8 +13,9 @@ export type FileOptimizationResult = {
 
 const IMAGE_MAX_SIDE = 1800;
 const IMAGE_QUALITY = 0.78;
-const PDF_IMAGE_MAX_SIDE = 1600;
-const PDF_IMAGE_QUALITY = 0.68;
+const PDF_IMAGE_MAX_SIDE = 2200;
+const PDF_IMAGE_MAX_SCALE = 2.6;
+const PDF_IMAGE_QUALITY = 0.84;
 const MIN_SAVINGS_BYTES = 8 * 1024;
 const MIN_SAVINGS_RATIO = 0.02;
 
@@ -137,7 +138,7 @@ async function optimizePdfAsImages(file: File): Promise<FileOptimizationResult> 
   for (let pageNumber = 1; pageNumber <= sourceDocument.numPages; pageNumber += 1) {
     const page = await sourceDocument.getPage(pageNumber);
     const baseViewport = page.getViewport({ scale: 1 });
-    const renderScale = Math.min(2, PDF_IMAGE_MAX_SIDE / Math.max(baseViewport.width, baseViewport.height));
+    const renderScale = Math.min(PDF_IMAGE_MAX_SCALE, PDF_IMAGE_MAX_SIDE / Math.max(baseViewport.width, baseViewport.height));
     const viewport = page.getViewport({ scale: renderScale });
     const canvas = document.createElement("canvas");
     const context = canvas.getContext("2d", {
