@@ -21,3 +21,11 @@ export function isImage(path: string) {
 export function isBrowserDocument(path: string) {
   return /\.(pdf|txt|html?)$/i.test(path);
 }
+
+export function isPdf(path: string) {
+  return /\.pdf$/i.test(path);
+}
+
+export function isOfficeDocument(path: string) {
+  return /\.(docx?|xlsx?|pptx?)$/i.test(path);
+}

@@ -468,10 +468,15 @@ button {
 }
 
 .viewer-frame {
+  background: #fff;
   border: 0;
   display: block;
   height: calc(100vh - 67px);
   width: 100%;
+}
+
+.office-frame {
+  background: #f7f8fa;
 }
 
 .viewer-image {
@@ -485,9 +490,11 @@ button {
 .viewer-image img {
   background: #fff;
   border-radius: 8px;
+  height: auto;
   max-height: calc(100vh - 115px);
   max-width: 100%;
   object-fit: contain;
+  width: auto;
 }
 
 .viewer-fallback {
