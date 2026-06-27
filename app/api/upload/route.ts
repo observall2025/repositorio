@@ -7,12 +7,6 @@ import { createSignedDocumentUpload } from "@/lib/files";
 export const runtime = "nodejs";
 
 function getRequestBaseUrl(request: NextRequest) {
-  const configured = process.env.NEXT_PUBLIC_APP_URL;
-
-  if (configured) {
-    return configured.replace(/\/$/g, "");
-  }
-
   const host = request.headers.get("x-forwarded-host") ?? request.headers.get("host") ?? new URL(request.url).host;
   const protocol = request.headers.get("x-forwarded-proto") ?? new URL(request.url).protocol.replace(":", "");
 
