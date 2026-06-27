@@ -18,3 +18,10 @@ export function getMaxUploadBytes() {
 
   return safeMegabytes * 1024 * 1024;
 }
+
+export function getStorageCapacityBytes() {
+  const megabytes = Number(process.env.STORAGE_CAPACITY_MB || "1024");
+  const safeMegabytes = Number.isFinite(megabytes) && megabytes > 0 ? megabytes : 1024;
+
+  return safeMegabytes * 1024 * 1024;
+}

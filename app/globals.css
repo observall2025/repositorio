@@ -229,7 +229,7 @@ button {
 .metrics {
   display: grid;
   gap: 12px;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin-bottom: 18px;
 }
 
@@ -249,6 +249,54 @@ button {
 
 .metric strong {
   font-size: 1.35rem;
+}
+
+.storage-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 12px;
+  margin-bottom: 18px;
+  padding: 16px;
+}
+
+.storage-panel > div:first-child {
+  align-items: baseline;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+}
+
+.storage-label,
+.storage-foot {
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+
+.storage-panel strong {
+  font-size: 1rem;
+}
+
+.storage-progress {
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  height: 12px;
+  overflow: hidden;
+}
+
+.storage-progress span {
+  background: var(--brand);
+  display: block;
+  height: 100%;
+}
+
+.storage-foot {
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
 }
 
 .grid {
@@ -472,6 +520,13 @@ button {
   .metrics,
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .storage-panel > div:first-child,
+  .storage-foot {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
   }
 
   .file-name strong {

@@ -26,6 +26,7 @@ SESSION_SECRET=um-segredo-grande-e-aleatorio
 
 NEXT_PUBLIC_APP_URL=https://seu-app.vercel.app
 MAX_UPLOAD_MB=50
+STORAGE_CAPACITY_MB=1024
 ```
 
 Para gerar `SESSION_SECRET`:
@@ -52,5 +53,7 @@ Abra `http://localhost:3000`.
 O bucket definido em `SUPABASE_BUCKET` sera criado automaticamente como publico no primeiro upload/listagem.
 
 O arquivo nao passa pela Function da Vercel: o servidor gera uma URL assinada e o navegador envia direto para o Supabase Storage.
+
+Defina `STORAGE_CAPACITY_MB` com a capacidade total do armazenamento que deseja acompanhar no dashboard. O valor padrao e `1024`, equivalente a 1 GB.
 
 Crie o usuario admin em Supabase > Authentication > Users e deixe `ADMIN_EMAIL` com o mesmo email.

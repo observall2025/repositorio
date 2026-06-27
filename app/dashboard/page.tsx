@@ -5,6 +5,7 @@ import CopyButton from "@/components/copy-button";
 import DeleteButton from "@/components/delete-button";
 import UploadForm from "@/components/upload-form";
 import { getCurrentUser } from "@/lib/auth";
+import { getMaxUploadBytes, getStorageCapacityBytes } from "@/lib/env";
 import { toFriendlyError } from "@/lib/errors";
 import { formatBytes, formatDate } from "@/lib/format";
 import { toToken } from "@/lib/links";
@@ -40,6 +41,10 @@ export default async function DashboardPage() {
   }
 
   const totalBytes = documents.reduce((sum, item) => sum + item.size, 0);
+  const storageCapacityBytes = getStorageCapacityBytes();
+  const maxUploadBytes = getMaxUploadBytes();
+  const storagePercent = Math.min((totalBytes / storageCapacityBytes) * 100, 100);
+  const remainingBytes = Math.max(storageCapacityBytes - totalBytes, 0);
 
   return (
     <main className="page">
@@ -63,12 +68,32 @@ export default async function DashboardPage() {
             <strong>{documents.length}</strong>
           </div>
           <div className="metric">
-            <span>Armazenamento</span>
+            <span>Em uso</span>
             <strong>{formatBytes(totalBytes)}</strong>
           </div>
           <div className="metric">
+            <span>Capacidade total</span>
+            <strong>{formatBytes(storageCapacityBytes)}</strong>
+          </div>
+          <div className="metric">
             <span>Limite por arquivo</span>
-            <strong>{process.env.MAX_UPLOAD_MB || "50"} MB</strong>
+            <strong>{formatBytes(maxUploadBytes)}</strong>
+          </div>
+        </section>
+
+        <section className="storage-panel" aria-label="Uso do armazenamento">
+          <div>
+            <span className="storage-label">Armazenamento do bucket</span>
+            <strong>
+              {formatBytes(totalBytes)} de {formatBytes(storageCapacityBytes)}
+            </strong>
+          </div>
+          <div className="storage-progress" aria-hidden="true">
+            <span style={{ width: `${storagePercent}%` }} />
+          </div>
+          <div className="storage-foot">
+            <span>{storagePercent.toFixed(storagePercent >= 10 ? 0 : 1)}% usado</span>
+            <span>{formatBytes(remainingBytes)} disponivel</span>
           </div>
         </section>
 
