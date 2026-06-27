@@ -36,7 +36,8 @@ a {
 }
 
 button,
-input {
+input,
+select {
   font: inherit;
 }
 
@@ -58,7 +59,7 @@ button {
 
 .page {
   min-height: 100vh;
-  padding: 32px;
+  padding: 28px;
 }
 
 .center-page {
@@ -69,7 +70,7 @@ button {
 
 .shell {
   margin: 0 auto;
-  max-width: 1160px;
+  max-width: 1220px;
   width: 100%;
 }
 
@@ -212,11 +213,11 @@ button {
   display: flex;
   gap: 16px;
   justify-content: space-between;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .header h1 {
-  font-size: clamp(1.65rem, 3vw, 2.35rem);
+  font-size: 2.15rem;
   line-height: 1.1;
   margin: 0;
 }
@@ -230,7 +231,7 @@ button {
   display: grid;
   gap: 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  margin-bottom: 18px;
+  margin-bottom: 14px;
 }
 
 .metric {
@@ -258,7 +259,7 @@ button {
   box-shadow: var(--shadow);
   display: grid;
   gap: 12px;
-  margin-bottom: 18px;
+  margin-bottom: 14px;
   padding: 16px;
 }
 
@@ -299,11 +300,120 @@ button {
   justify-content: space-between;
 }
 
+.folder-panel {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  box-shadow: var(--shadow);
+  margin-bottom: 18px;
+  padding: 16px;
+}
+
+.folder-head {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.folder-head h2 {
+  font-size: 1rem;
+  margin: 0;
+}
+
+.folder-head p {
+  color: var(--muted);
+  line-height: 1.45;
+  margin: 4px 0 0;
+}
+
+.folder-chip,
+.folder-card {
+  text-decoration: none;
+}
+
+.folder-chip {
+  align-items: center;
+  background: var(--surface-alt);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  display: inline-flex;
+  font-weight: 700;
+  gap: 8px;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.folder-chip.active,
+.folder-card.active {
+  border-color: rgba(14, 111, 100, 0.36);
+  box-shadow: 0 0 0 3px rgba(14, 111, 100, 0.1);
+}
+
+.folder-grid {
+  display: grid;
+  gap: 10px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.folder-card {
+  align-items: center;
+  background: #fbfcfb;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--text);
+  display: grid;
+  gap: 10px;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  min-height: 74px;
+  padding: 12px;
+}
+
+.folder-card:hover {
+  background: var(--surface-alt);
+}
+
+.folder-icon {
+  align-items: center;
+  background: rgba(14, 111, 100, 0.1);
+  border-radius: 8px;
+  color: var(--brand);
+  display: inline-flex;
+  height: 40px;
+  justify-content: center;
+  width: 40px;
+}
+
+.folder-card strong,
+.folder-card small {
+  display: block;
+}
+
+.folder-card strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.folder-card small {
+  color: var(--muted);
+  margin-top: 3px;
+}
+
+.folder-card em {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-style: normal;
+  white-space: nowrap;
+}
+
 .grid {
   align-items: start;
   display: grid;
   gap: 18px;
-  grid-template-columns: minmax(280px, 360px) minmax(0, 1fr);
+  grid-template-columns: minmax(300px, 380px) minmax(0, 1fr);
 }
 
 .section {
@@ -382,7 +492,7 @@ button {
 
 .files-table {
   border-collapse: collapse;
-  min-width: 720px;
+  min-width: 840px;
   width: 100%;
 }
 
@@ -432,6 +542,18 @@ button {
 .muted {
   color: var(--muted);
   font-size: 0.86rem;
+}
+
+.category-badge {
+  background: rgba(14, 111, 100, 0.09);
+  border: 1px solid rgba(14, 111, 100, 0.18);
+  border-radius: 999px;
+  color: var(--brand-strong);
+  display: inline-flex;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 5px 9px;
+  white-space: nowrap;
 }
 
 .actions {
@@ -528,9 +650,19 @@ button {
     flex-direction: column;
   }
 
+  .header h1 {
+    font-size: 1.75rem;
+  }
+
   .metrics,
+  .folder-grid,
   .grid {
     grid-template-columns: 1fr;
+  }
+
+  .folder-head {
+    align-items: flex-start;
+    flex-direction: column;
   }
 
   .storage-panel > div:first-child,

@@ -1,4 +1,5 @@
 import { randomBytes } from "node:crypto";
+import { getCategoryFromStoragePath, normalizeCategorySlug } from "./categories";
 import { getMaxUploadBytes } from "./env";
 import { fromToken, isDocumentHashToken, matchesDocumentToken } from "./links";
 import { ensureBucket, getSupabaseAdmin } from "./supabase";
@@ -19,6 +20,8 @@ export type DocumentItem = {
   name: string;
   size: number;
   mimeType: string;
+  categorySlug: string;
+  categoryLabel: string;
   createdAt: string | null;
   updatedAt: string | null;
   publicUrl: string;
@@ -61,12 +64,15 @@ async function listRecursive(prefix: string): Promise<DocumentItem[]> {
     }
 
     const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+    const category = getCategoryFromStoragePath(path);
 
     documents.push({
       path,
       name: item.name,
       size: Number(item.metadata?.size ?? 0),
       mimeType: String(item.metadata?.mimetype ?? item.metadata?.mimeType ?? "application/octet-stream"),
+      categorySlug: category.slug,
+      categoryLabel: category.label,
       createdAt: item.created_at,
       updatedAt: item.updated_at,
       publicUrl: data.publicUrl
@@ -153,14 +159,15 @@ function splitFileName(fileName: string) {
   };
 }
 
-export function buildStoragePath(fileName: string) {
+export function buildStoragePath(fileName: string, category?: string | null) {
   const unique = createShortId();
   const { baseName, extension } = splitFileName(fileName);
+  const categorySlug = normalizeCategorySlug(category);
 
-  return `${ROOT_PREFIX}/${unique}-${baseName}${extension}`;
+  return `${ROOT_PREFIX}/${categorySlug}/${unique}-${baseName}${extension}`;
 }
 
-export async function createSignedDocumentUpload(fileName: string, fileSize: number) {
+export async function createSignedDocumentUpload(fileName: string, fileSize: number, category?: string | null) {
   const maxBytes = getMaxUploadBytes();
 
   if (fileSize <= 0) {
@@ -173,7 +180,7 @@ export async function createSignedDocumentUpload(fileName: string, fileSize: num
 
   const supabase = getSupabaseAdmin();
   const bucket = await ensureBucket();
-  const path = buildStoragePath(fileName);
+  const path = buildStoragePath(fileName, category);
   const { data: signedUpload, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, {
     upsert: false
   });
