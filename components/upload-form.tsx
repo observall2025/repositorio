@@ -3,10 +3,12 @@
 import { CheckCircle2, Loader2, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { FormEvent, useState } from "react";
+import { canRenderPdf, renderPdfToStorage } from "@/lib/pdf-render-client";
 import CopyButton from "./copy-button";
 
 type UploadResponse = {
   error?: string;
+  path?: string;
   signedUrl?: string;
   viewerUrl?: string;
   publicUrl?: string;
@@ -80,6 +82,15 @@ export default function UploadForm() {
       await uploadToSignedUrl(data.signedUrl, file);
 
       setMessage("Arquivo enviado.");
+
+      if (data.path && canRenderPdf(file)) {
+        setMessage("Arquivo enviado. Renderizando paginas...");
+        const pages = await renderPdfToStorage(data.path, file, ({ page, total }) => {
+          setMessage(`Renderizando pagina ${page} de ${total}...`);
+        });
+        setMessage(`Arquivo enviado e renderizado (${pages} paginas).`);
+      }
+
       setViewerUrl(data.viewerUrl || "");
       form.reset();
       router.refresh();

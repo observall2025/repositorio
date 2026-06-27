@@ -3,12 +3,13 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import CopyButton from "@/components/copy-button";
 import DeleteButton from "@/components/delete-button";
+import RenderButton from "@/components/render-button";
 import UploadForm from "@/components/upload-form";
 import { getCurrentUser } from "@/lib/auth";
 import { getMaxUploadBytes, getStorageCapacityBytes } from "@/lib/env";
 import { toFriendlyError } from "@/lib/errors";
 import { formatBytes, formatDate } from "@/lib/format";
-import { toToken } from "@/lib/links";
+import { isPdf, toToken } from "@/lib/links";
 import { type DocumentItem, listDocuments } from "@/lib/files";
 
 async function getBaseUrl() {
@@ -148,6 +149,13 @@ export default async function DashboardPage() {
                             <div className="actions">
                               <CopyButton value={viewUrl} label="Copiar link de visualizacao" />
                               <CopyButton value={document.publicUrl} label="Copiar link direto" variant="direct" />
+                              {isPdf(document.path) ? (
+                                <RenderButton
+                                  name={document.name}
+                                  path={document.path}
+                                  publicUrl={document.publicUrl}
+                                />
+                              ) : null}
                               <a className="icon-button" href={viewUrl} target="_blank" rel="noreferrer" title="Abrir">
                                 <ExternalLink size={17} aria-hidden="true" />
                                 <span className="sr-only">Abrir</span>

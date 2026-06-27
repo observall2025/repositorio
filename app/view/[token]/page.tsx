@@ -1,6 +1,7 @@
 import { Download } from "lucide-react";
 import { notFound } from "next/navigation";
 import { getBucketName } from "@/lib/env";
+import { listRenderedPages } from "@/lib/files";
 import { getFileNameFromPath, fromToken, isBrowserDocument, isImage, isOfficeDocument, isPdf } from "@/lib/links";
 import { getSupabaseAdmin } from "@/lib/supabase";
 
@@ -24,6 +25,7 @@ export default async function ViewPage({ params }: ViewPageProps) {
   const publicUrl = data.publicUrl;
   const officeViewerUrl = `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(publicUrl)}`;
   const browserDocumentUrl = isPdf(path) ? `${publicUrl}#toolbar=0&navpanes=0&view=FitH` : publicUrl;
+  const renderedPages = isPdf(path) ? await listRenderedPages(path) : [];
 
   return (
     <main className="viewer-page">
@@ -35,7 +37,13 @@ export default async function ViewPage({ params }: ViewPageProps) {
         </a>
       </header>
 
-      {isImage(path) ? (
+      {renderedPages.length > 0 ? (
+        <div className="rendered-document">
+          {renderedPages.map((page, index) => (
+            <img key={page.path} src={page.publicUrl} alt={`${fileName} - pagina ${index + 1}`} />
+          ))}
+        </div>
+      ) : isImage(path) ? (
         <div className="viewer-image">
           <img src={publicUrl} alt={fileName} />
         </div>

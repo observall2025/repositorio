@@ -22,6 +22,12 @@ export type DocumentItem = {
   publicUrl: string;
 };
 
+export type RenderedPage = {
+  path: string;
+  name: string;
+  publicUrl: string;
+};
+
 function isFolder(item: StorageObject) {
   return item.id === null || item.metadata === null;
 }
@@ -108,6 +114,44 @@ export function buildStoragePath(fileName: string) {
   return `${ROOT_PREFIX}/${year}-${month}/${year}-${month}-${day}-${unique}-${sanitizeFileName(fileName)}`;
 }
 
+export function getRenderedPrefix(path: string) {
+  return `renders/${path.replace(/\.[^/.]+$/g, "")}`;
+}
+
+export function buildRenderedPagePath(sourcePath: string, page: number) {
+  return `${getRenderedPrefix(sourcePath)}/page-${String(page).padStart(3, "0")}.jpg`;
+}
+
+export async function listRenderedPages(sourcePath: string) {
+  const supabase = getSupabaseAdmin();
+  const bucket = await ensureBucket();
+  const prefix = getRenderedPrefix(sourcePath);
+  const { data, error } = await supabase.storage.from(bucket).list(prefix, {
+    limit: 500,
+    sortBy: {
+      column: "name",
+      order: "asc"
+    }
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return (data ?? [])
+    .filter((item) => !isFolder(item) && /\.jpe?g$/i.test(item.name))
+    .map((item) => {
+      const path = `${prefix}/${item.name}`;
+      const { data: publicFile } = supabase.storage.from(bucket).getPublicUrl(path);
+
+      return {
+        path,
+        name: item.name,
+        publicUrl: publicFile.publicUrl
+      } satisfies RenderedPage;
+    });
+}
+
 export async function createSignedDocumentUpload(fileName: string, fileSize: number) {
   const maxBytes = getMaxUploadBytes();
 
@@ -140,6 +184,42 @@ export async function createSignedDocumentUpload(fileName: string, fileSize: num
     path,
     signedUrl: signedUpload.signedUrl,
     publicUrl: publicFile.publicUrl
+  };
+}
+
+export async function createSignedRenderedPageUpload(sourcePath: string, page: number, fileSize: number) {
+  const maxBytes = 8 * 1024 * 1024;
+
+  if (!sourcePath.startsWith(`${ROOT_PREFIX}/`)) {
+    throw new Error("Arquivo de origem invalido.");
+  }
+
+  if (!Number.isInteger(page) || page <= 0 || page > 500) {
+    throw new Error("Pagina invalida.");
+  }
+
+  if (fileSize <= 0 || fileSize > maxBytes) {
+    throw new Error("Pagina renderizada acima do limite.");
+  }
+
+  const supabase = getSupabaseAdmin();
+  const bucket = await ensureBucket();
+  const path = buildRenderedPagePath(sourcePath, page);
+  const { data: signedUpload, error } = await supabase.storage.from(bucket).createSignedUploadUrl(path, {
+    upsert: true
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  if (!signedUpload) {
+    throw new Error("URL de upload nao gerada.");
+  }
+
+  return {
+    path,
+    signedUrl: signedUpload.signedUrl
   };
 }
 
